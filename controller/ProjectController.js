@@ -15,12 +15,23 @@ router.post("/", async (req, res) => {
 
 router.get("/", async (req, res) => {
   let result = await ProjectService.getAllProjects();
-  res.send(result);
+  if (!result.success) {
+    return res.status(400).json(result)
+  }
+ return res.status(200).json(result)
 });
+
 router.get("/:category", async (req, res) => {
-  let result = await ProjectService.getProjectsByCategory();
-  res.send(result);
+  const { category } = req.params
+
+  let result = await ProjectService.getProjectsByCategory({ category });
+  if (!result.success) {
+    return res.status(400).json(result)
+  }
+  return res.status(200).json(result)
 });
+
+
 router.get("/:project_id", async (req, res) => {
   let result = await ProjectService.getProjectDetails();
   res.send(result);

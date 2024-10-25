@@ -112,6 +112,34 @@ exports.getAllProjects = () => {
         }
     }
 }
-exports.getProjectsByCategory = () => ({ msg: "test" });
+exports.getProjectsByCategory = ({category}) => {
+    try {
+        return new Promise((resolve, reject) => {
+            const query = 'select * from projects where category = ?'
+            pool.query(query, category, (err, result) => {
+                if (err) {
+                    return reject(err)
+                }
+                if (result.length == 0) {
+                    return reject({
+                        success: false,
+                        message: ' the project was not found in the specified category.'
+                    })
+                }
+                if (result.length > 0) {
+                    return resolve({
+                        success: true,
+                        result
+                    })
+                }
+            })
+        })
+    } catch (error) {
+        return {
+            success: false,
+            message: error?.message
+        }
+    }
+}
 exports.getProjectDetails = () => ({ msg: "test" });
 exports.getInvestmentDetailsByProjectId = () => ({ msg: "test" });
