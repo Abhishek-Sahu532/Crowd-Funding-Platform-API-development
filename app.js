@@ -1,12 +1,14 @@
 const express = require("express");
 const app = express();
-const path = require("path");
-const bodyParser = require("body-parser");
+
+dotenv.path('./env')
 
 const InvestmentController = require("./controller/InvestmentController");
 const ProjectController = require("./controller/ProjectController");
 
-app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use("/investor", InvestmentController);
 app.use("/project", ProjectController);
 
