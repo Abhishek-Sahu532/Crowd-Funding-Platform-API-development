@@ -82,7 +82,36 @@ exports.createProject = async ({ title, description, category, fundingGoal, curr
         }
     }
 };
-exports.getAllProjects = () => ({ msg: "test" });
+exports.getAllProjects = () => {
+    try {
+
+        return new Promise((resolve, reject) => {
+            const query = 'select * from projects'
+
+            pool.query(query, (err, result) => {
+                if (err) {
+                    return reject(err)
+                }
+                console.log(result)
+
+                if (result.length == 0) {
+                    return reject({
+                        success: false,
+                        message: 'no project data was found'
+                    })
+                }
+                if (result.length > 0) {
+                    return resolve(result)
+                }
+            })
+        })
+    } catch (error) {
+        return {
+            success: false,
+            messsage: error?.message
+        }
+    }
+}
 exports.getProjectsByCategory = () => ({ msg: "test" });
 exports.getProjectDetails = () => ({ msg: "test" });
 exports.getInvestmentDetailsByProjectId = () => ({ msg: "test" });
