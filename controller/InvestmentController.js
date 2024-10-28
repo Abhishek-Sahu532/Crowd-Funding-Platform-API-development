@@ -2,9 +2,20 @@ const express = require("express");
 const router = express.Router();
 const InvestmentService = require("../service/InvestmentService");
 
-router.post("/", async (req, res) => {
-  let result = await InvestmentService.getInvestors();
-  res.send(result);
+router.get("/", async (req, res) => {
+  try {
+    let result = await InvestmentService.getInvestors();
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'An internal server error occurred'
+    });
+  }
 });
 
 router.post("/investment", async (req, res) => {

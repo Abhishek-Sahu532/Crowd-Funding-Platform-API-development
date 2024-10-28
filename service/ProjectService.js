@@ -141,6 +141,7 @@ exports.getProjectsByCategory = ({category}) => {
         }
     }
 }
+
 exports.getProjectDetails = async ({ project_id }) => {
     try {
         return new Promise((resolve, reject) => {
@@ -192,4 +193,5 @@ exports.getProjectDetails = async ({ project_id }) => {
         }
     }
 };
+
 exports.getInvestmentDetailsByProjectId = () => ({ msg: "test" });
