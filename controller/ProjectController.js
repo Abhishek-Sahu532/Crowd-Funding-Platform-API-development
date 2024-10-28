@@ -33,8 +33,12 @@ router.get("/:category", async (req, res) => {
 
 
 router.get("/:project_id", async (req, res) => {
-  let result = await ProjectService.getProjectDetails();
-  res.send(result);
+  const {project_id} = req.params
+  let result = await ProjectService.getProjectDetails({project_id});
+  if (!result.success) {
+    return res.status(400).json(result)
+  }
+  return res.status(200).json(result)
 });
 router.get("/:project_id/investments", async (req, res) => {
   let result = await ProjectService.getInvestmentDetailsByProjectId();

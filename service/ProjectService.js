@@ -141,5 +141,55 @@ exports.getProjectsByCategory = ({category}) => {
         }
     }
 }
-exports.getProjectDetails = () => ({ msg: "test" });
+exports.getProjectDetails = async ({ project_id }) => {
+    try {
+        return new Promise((resolve, reject) => {
+            const queryForProjectDetails = 'SELECT * FROM projects WHERE id = ?';
+            pool.query(queryForProjectDetails, [project_id], (err, result) => {
+
+                if (err) {
+                    return reject(err)
+                }
+                if (result.length === 0) {
+                    return reject(
+                        {
+                            success: false,
+                            message: `No project with project id ${project_id} found`
+                        }
+                    )
+                }
+
+                const projectDetails = {
+                    success: true,
+                    "id": result[0].id,
+                    "title": result[0].title,
+                    "description": result[0].description,
+                    "category": result[0].category,
+                    "fundingGoal": result[0].funding_goal,
+                    "currentFunding": result[0].current_funding,
+                    "createdAt": result[0].created_at,
+                    "updatedAt": result[0].updated_at,
+                    "feedbacks": []
+                }
+
+                const queryForFeedback = 'SELECT * FROM feedbacks WHERE project_id = ?';
+                pool.query(queryForFeedback, [project_id], (feedbackErr, feedbackResult) => {
+                    if (feedbackErr) {
+                        return reject(feedbackErr)
+                    }
+
+                    console.log('feedbackResult', feedbackResult)
+
+                    projectDetails.feedbacks = feedbackResult
+                    return resolve(projectDetails)
+                })
+            })
+        })
+    } catch (error) {
+        return {
+            success: false,
+            message: error?.message || 'An error occurred'
+        }
+    }
+};
 exports.getInvestmentDetailsByProjectId = () => ({ msg: "test" });
