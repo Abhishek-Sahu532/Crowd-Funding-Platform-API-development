@@ -19,8 +19,20 @@ router.get("/", async (req, res) => {
 });
 
 router.post("/investment", async (req, res) => {
-  let result = await InvestmentService.makeInvestment();
-  res.send(result);
+  try {
+    const { project_id, investor_id, amount } = req.body
+    let result = await InvestmentService.makeInvestment({ project_id, investor_id, amount });
+    if (!result.success) {
+      return res.status(400).json(result)
+    }
+    return res.status(200).json(result)
+  } catch (error) {
+    console.log('errrrrrrrrr', error)
+    return res.status(500).json({
+      success: false,
+      message: error?.message
+    })
+  }
 });
 
 router.get("/dashboard", async (req, res) => {
