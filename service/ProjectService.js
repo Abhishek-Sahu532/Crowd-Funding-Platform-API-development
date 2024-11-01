@@ -194,4 +194,55 @@ exports.getProjectDetails = async ({ project_id }) => {
     }
 };
 
-exports.getInvestmentDetailsByProjectId = () => ({ msg: "test" });
+
+exports.getInvestmentDetailsByProjectId = async ({ project_id }) => {
+    let resultOfProject = await exports.getProjectDetails({ project_id })
+    // console.log('eeeeeeeee', resultOfProject)
+    return new Promise((resolve, reject) => {
+        let resultObject = {
+            "projectId": resultOfProject?.id,
+            "currentFunding": resultOfProject?.currentFunding,
+            "fundingGoal": resultOfProject?.fundingGoal,
+            "investors": [],
+            "timestamp": new Date(),
+        }
+        // console.log(resultObject)
+        const queryForInvestmentDetails = 'select * from investments where project_id = ?'
+        pool.query(queryForInvestmentDetails, [project_id], (err, investmentResults) => {
+            if (err) {
+                console.log(err)
+                reject(err)
+            }
+            // Populate resultObject.investors with initial investment details
+            resultObject.investors = investmentResults.map(investment => ({
+                'investorId': investment.investor_id,
+                'amount': investment.amount
+            }));
+
+
+            // Use Promise.all to fetch details for each investor
+            try {
+                Promise.all(resultObject.investors.map(async (investor, index) => {
+                    const queryForInvestorDetails = 'select * from investors where investor_id = ?';
+                    const investorResult = await new Promise((resolve, reject) => {
+                        pool.query(queryForInvestorDetails, [investor.investorId], (err, result) => {
+                            if (err) return reject(err);
+                            resolve(result);
+                        });
+                    });
+
+                    // Add investor details
+                    resultObject.investors[index].investorName = investorResult[0].investor_name;
+                    resultObject.investors[index].email = investorResult[0].email;
+                }));
+
+                // Resolve the final resultObject after all queries are completed
+                resolve(resultObject);
+            } catch (error) {
+                reject(error);
+            }
+
+
+        })
+    })
+}
