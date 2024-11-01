@@ -82,6 +82,7 @@ exports.createProject = async ({ title, description, category, fundingGoal, curr
         }
     }
 };
+
 exports.getAllProjects = () => {
     try {
 
@@ -112,6 +113,7 @@ exports.getAllProjects = () => {
         }
     }
 }
+
 exports.getProjectsByCategory = ({category}) => {
     try {
         return new Promise((resolve, reject) => {
@@ -193,7 +195,6 @@ exports.getProjectDetails = async ({ project_id }) => {
         }
     }
 };
-
 
 exports.getInvestmentDetailsByProjectId = async ({ project_id }) => {
     let resultOfProject = await exports.getProjectDetails({ project_id })

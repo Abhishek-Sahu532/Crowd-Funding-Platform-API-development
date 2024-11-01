@@ -165,6 +165,73 @@ exports.makeInvestment = async ({ project_id, investor_id, amount }) => {
         })
     })
 }
-exports.getInvestorDashboard = () => ({ msg: "test" });
+
+exports.getInvestorDashboard = ({ investorId }) => {
+    return new Promise((resolve, reject) => {
+        const queryForInvestorDetails = 'select * from investors where 	investor_id =?'
+
+        pool.query(queryForInvestorDetails, [investorId], (err, result) => {
+            if (err) {
+                return reject(err)
+            }
+            let resultObject = {
+                success: true,
+                "projectInvestments": []
+            }
+            if (result.length > 0) {
+                resultObject['investorId'] = result[0].investor_id
+                resultObject['investorName'] = result[0].investor_name
+                resultObject['email'] = result[0].email
+                resultObject['totalInvestedAmount'] = result[0].total_invested_amount == null ? 0 : result[0].total_invested_amount
+            }
+
+            const queryForProjectsDetailsFromInvestments = 'select * from investments where investor_id = ?'
+
+            pool.query(queryForProjectsDetailsFromInvestments, [investorId], (err, resultOfInvestments) => {
+                if (err) {
+                    console.log(err)
+                    return reject(err)
+                }
+                if (resultOfInvestments.length > 0) {
+                    resultObject.projectInvestments = resultOfInvestments.map((investment) => ({
+                        projectId: investment.project_id
+                    }))
+                }
+
+
+                const projectInvestmentDetailsPromise = resultObject.projectInvestments.map((investment, i) => {
+                    return new Promise((resolve, reject) => {
+
+                        const queryForProjectDetails = 'select * from projects where id = ?'
+                        pool.query(queryForProjectDetails, [investment?.projectId], (err, resultOfProjectQuery) => {
+                            if (err) {
+                                return reject(err)
+                            }
+                            if (resultOfProjectQuery.length > 0) {
+                                resultObject.projectInvestments[i].title = resultOfProjectQuery[0].title
+                                resultObject.projectInvestments[i].category = resultOfProjectQuery[0].category
+                                resultObject.projectInvestments[i].fundingGoal = resultOfProjectQuery[0].funding_goal
+                                resultObject.projectInvestments[i].investedAmount = resultOfProjectQuery[0].current_funding
+                            }
+                            resolve()
+
+                        })
+
+
+
+
+                    })
+                })
+              
+                Promise.all(projectInvestmentDetailsPromise)
+                    .then(() => {
+                        console.log(resultObject)
+                        return resolve(resultObject); // Resolve the main promise with resultObject after all project details are added
+                    })
+                    .catch(error => reject(error));
+            })
+        })
+    })
+}
 exports.submitFeedback = () => ({ msg: "test" });
 
