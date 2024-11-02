@@ -51,8 +51,23 @@ router.get("/dashboard/:investorId", async (req, res) => {
     })
   }
 });
+
+
 router.post("/:project_id/feedback", async (req, res) => {
-  let result = await InvestmentService.submitFeedback();
-  res.send(result);
+  try {
+    const { investorId, rating, comment } = req.body
+   const {project_id} = req.params
+    let result = await InvestmentService.submitFeedback( { investorId, rating, comment, project_id });
+    if (!result.success) {
+      return res.status(400).json(result)
+    }
+    return res.status(200).json(result)
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    })
+  }
 });
+
 module.exports = router;

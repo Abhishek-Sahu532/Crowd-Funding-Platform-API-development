@@ -233,5 +233,80 @@ exports.getInvestorDashboard = ({ investorId }) => {
         })
     })
 }
-exports.submitFeedback = () => ({ msg: "test" });
+exports.submitFeedback = async ({ investorId, rating, comment, project_id }) => {
 
+
+    return new Promise(async (resolve, reject) => {
+        if (rating < 0 && rating > 6) {
+            return reject({
+                success: false,
+                message: 'The rating is invalid.'
+            })
+        }
+        if (comment.trim() == '') {
+            return reject({
+                success: false,
+                message: 'The comment is invalid.'
+            })
+        }
+
+        const queryProjectDetails = 'select * from projects where id = ?'
+
+        pool.query(queryProjectDetails, [project_id], (err, resultOfProject) => {
+            if (err) {
+                return reject(err)
+            }
+            if (resultOfProject.length == 0) {
+                return reject({
+                    success: false,
+                    message: `No project with project id ${project_id} found`
+                })
+            }
+          
+
+            const queryForInvestorDetails = 'select * from investors where 	investor_id = ?'
+            pool.query(queryForInvestorDetails, [investorId], (err, resultOfInvestor) => {
+                if (err) {
+                    return reject(err)
+                }
+                if (resultOfInvestor.length == 0) {
+                    return reject({
+                        success: false,
+                        message: 'Investor not exist from the given ID'
+                    })
+                }
+                if (resultOfInvestor.length > 0) {
+                    const queryToInsertRecords = 'insert into feedbacks (comment, investor_id, project_id, rating, timestamp) values(?,?,?,?,?)'
+                    const timestamp = new Date()
+                  
+                    pool.query(queryToInsertRecords, [comment, investorId, project_id, rating, timestamp], (err, resultOfInsertRecord) => {
+                        if (err) {
+                            return reject(err)
+                        }
+                        if (resultOfInsertRecord.affectedRows > 0) {
+                            const insertId = resultOfInsertRecord.insertId
+                            const queryToGetTheResult = 'select * from feedbacks where feedback_id = ?'
+                            pool.query(queryToGetTheResult, [insertId], (err, resultOfFinalResult) => {
+                                if (err) {
+                                    return reject(err)
+                                }
+                                if (resultOfFinalResult.length > 0) {
+                                    // console.log('resultOfFinalResult', resultOfFinalResult)
+                                    return resolve({
+                                        success: true,
+                                        "feedbackId": resultOfFinalResult[0].feedback_id,
+                                        "projectId": resultOfFinalResult[0].project_id,
+                                        "investorId": resultOfFinalResult[0].investor_id,
+                                        "rating": resultOfFinalResult[0].rating,
+                                        "comment": resultOfFinalResult[0].comment,
+                                        "timestamp": resultOfFinalResult[0].timestamp,
+                                    })
+                                }
+                            })
+                        }
+                    })
+                }
+            })
+        })
+    })
+}
